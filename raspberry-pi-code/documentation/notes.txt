@@ -1,0 +1,113 @@
+This is what I'm doing on the Raspberry Pi:
+sudo apt-get install mosquitto mosquitto-clients -y
+
+"mosquitto" provides the MQTT message broker.  "mosquitto-clients" provides the
+command-line utilities (mosquitto_pub and mosquitto_sub) for publishing and
+subscribing.  
+
+Installing "mosquitto" should start the broker daemon; to see if it has, run
+this:
+	systemctl is-active mosquitto	
+If it's running it should respond with "active", or you could run this:
+	ps aux | grep mos  
+You can subscribe to messages from a particular "path" (like the path in a file
+system) like this:
+	$ mosquitto_sub -t CompanyX/building1/floor1/room1
+at which point, it doesn't return you to the prompt but waits for messages.
+.  I can send it a message like this (using a different terminal window or tab):
+	$ mosquitto_pub -t CompanyX/building1/floor1/room1 -m '"id": 111, "set_temperature": 23, "actual_temperature": 22.85'
+and when I hit Enter, the 
+	"id": 111, "set_temperature": 23, "actual_temperature": 22.85
+part will appear under the subscription line (in the first terminal window or 
+tab), e.g.:
+	$ mosquitto_sub -t CompanyX/building1/floor1/room1
+	"id": 111, "set_temperature": 23, "actual_temperature": 22.85" 
+-----------
+Okay, this is a test between the Raspberry Pi and the distance sensor:
+	Raspberry Pi (subscription):
+		mosquitto_sub -t garage/distance
+	Raspberry Pi (publish):
+		mosquitto_pub -t garage/distance -m '"distance":  12'
+(It worked.)
+-----------
+How to Log the Messages
+Script (called "broker"):
+	#!/usr/bin/bash
+	
+	while read topic; do
+		echo $topic >> log.txt
+	done < <(mosquitto_sub -t garage/distance)
+Terminal 1:
+	bash broker
+Terminal 2:
+	mosquitto_pub -t garage/distance -m '"distance":  12'
+Terminal 3:
+	cat log.txt
+	"distance": 12
+(Note:  the extra space I had before "12" was removed.)
+-----------
+How to Log the Messages, Detect Message Contents, and Do Things Accordingly
+Script (called "broker"):
+	#!/usr/bin/bash
+	
+	while read topic; do
+		echo $topic >> log.txt
+		if [[ $topic =~ distance ]]; then
+			echo "It's a long mile!"
+		fi
+	done < <(mosquitto_sub -t garage/distance)
+Terminal 1:
+	bash broker
+	It's a long mile!
+Terminal 2:
+	mosquitto_pub -t garage/distance -m '"distance":  12'
+Terminal 3:
+	cat log.txt
+	"distance": 12
+(Note:  the extra space I had before "12" was removed.)
+
+If I substitute the word "vegetable" for the word "distance", it doesn't
+print "It's a long mile!", but the log contains all of the messages (including
+the "vegetable" one).  
+
+This means that I can send and receive messages locally and do stuff depending 
+on which messages are sent.  Now, I need to do the same thing but remotely.
+-----------
+
+
+
+
+(LEFT OFF HERE)
+
+
+Source:  https://www.baeldung.com/linux/bash-mqtt-client
+--------------------------------------------------------------------------------
+Reference:
+
+How to Edit the Order of Items in the LXPanel's Application Launcher on Raspberry Pi OS
+Introduction
+Raspberry Pi OS's LXQT setup appears to be stripped down (at least compared to how LXDE
+used to be), so there are graphical configuration options that just aren't there, so 
+(in some cases) you have to configure it by editing configuration files.  To edit the 
+order of the launchers in the application launcher on the LXPanel, do the following:
+.  Open a terminal.
+.  Do this:
+	cd .config/
+.  You should see a file called "wf-panel-pi.ini".  Edit it:
+	vim wf-panel-pi.ini
+.  The launchers are numbered like this:
+	launcher_000001[...]
+	launcher_000002[...]
+	launcher_000003[...]
+To reorder them, don't change the order in the file, just change the numbers,
+e.g.:
+	launcher_000002[...]
+	launcher_000001[...]
+	launcher_000003[...]
+.  Save the file, and the panel should detect it and change the order you can
+see.  Of course, if you want to change the order in the file (for readability)
+you can do that as well, but it's the asciibetical order that it uses to decide
+the order on the graphical panel's launcher.  
+---
+Source:  https://forums.raspberrypi.com/viewtopic.php?t=358648
+
