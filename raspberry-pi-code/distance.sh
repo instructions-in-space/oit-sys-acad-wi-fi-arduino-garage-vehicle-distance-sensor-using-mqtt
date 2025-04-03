@@ -3,13 +3,17 @@
 while read topic; do
 	echo $topic >> log.txt
 	if [ $topic -gt 50 ]; then
-		echo "Greater than 50cm (green)"
+		#echo "green"
+		mosquitto_pub -t garage/led -m 'green'
 	elif [ $topic -lt 51 ] && [ $topic -gt 25 ]; then
-		echo "Less than 51cm and greater than 25cm (yellow)"
+		#echo "yellow"
+		mosquitto_pub -t garage/led -m 'yellow'
 	elif [ $topic -lt 26 ] && [ $topic -gt 12 ]; then
-		echo "Less than 26cm and greater than 12cm (red)"
+		#echo "red"
+		mosquitto_pub -t garage/led -m 'solid_red'
 	elif [ $topic -lt 13 ]; then
-		echo "Less than 13cm (flashing red)"
+		#echo "flashing red"
+		mosquitto_pub -t garage/led -m 'flashing_red'
 	fi
 
 #done < <(mosquitto_sub -h 127.0.0.1 -t garage/distance)

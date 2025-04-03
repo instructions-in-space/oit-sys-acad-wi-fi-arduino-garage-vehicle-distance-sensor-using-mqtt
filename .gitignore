@@ -1,6 +1,7 @@
 # Custom
 *.h
 .DS_Store
+log.txt
 
 # Prerequisites
 *.d
