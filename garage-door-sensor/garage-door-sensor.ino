@@ -19,6 +19,7 @@ void setup_wifi() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
+  Serial.println("\nConnected! IP Address: " + WiFi.localIP().toString());
 }
 
 void reconnect() {
@@ -49,8 +50,10 @@ void loop() {
     lastState = state;
     if (state == HIGH) {
       client.publish(topic, "open");
+      Serial.println("open");
     } else {
       client.publish(topic, "closed");
+      Serial.println("closed");
     }
   }
 
